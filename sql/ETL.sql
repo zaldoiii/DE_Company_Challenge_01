@@ -6,18 +6,22 @@ CREATE TABLE FactTimesheetsMast AS
 			t.Id AS TimesheetId,
 			t.EmployeeId,
 			e.BranchId,
+			e.Salary AS MonthlySalary,
 			t.`Date`,
 			t.Checkin,
 			t.Checkout,
-			TIME_TO_SEC(TIMEDIFF(t.Checkout, t.Checkin)) AS WorkDurationSec, 
-			e.Salary
+			IF(
+				(TIME(t.Checkout) >= TIME(t.Checkin)), 
+				TIME_TO_SEC(TIMEDIFF(t.Checkout, t.Checkin)),
+				86400 + TIME_TO_SEC(TIMEDIFF(t.Checkout, t.Checkin))
+			) AS WorkDurationSec
 		FROM Timesheets AS t
 		INNER JOIN Employees AS e ON
 			(t.EmployeeId = e.Id)
 	), StgDailyWorkDurationAvg AS ( 
 		SELECT
 			temp.`Date`,
-			ROUND(AVG(temp.WorkDurationSec), 4) AS WorkDurationSecAvg 
+			ROUND(AVG(temp.WorkDurationSec), 2) AS WorkDurationSecAvg 
 		FROM StgTimesheets AS temp
 		WHERE
 			temp.Checkout IS NOT NULL
@@ -27,12 +31,12 @@ CREATE TABLE FactTimesheetsMast AS
 		a.TimesheetId,
 		a.EmployeeId,
 		a.BranchId,
+		a.MonthlySalary,
 		a.`Date`,
 		a.Checkin,
 		a.Checkout,
 		IF((a.Checkin IS NULL) OR (a.Checkout IS NULL), b.WorkDurationSecAvg, a.WorkDurationSec) AS WorkDurationSec,
-		IF((a.Checkin IS NULL) OR (a.Checkout IS NULL), ROUND(b.WorkDurationSecAvg/3600, 2), ROUND(a.WorkDurationSec/3600, 2)) AS Workhour,
-		a.Salary
+		IF((a.Checkin IS NULL) OR (a.Checkout IS NULL), ROUND(b.WorkDurationSecAvg/3600, 2), ROUND(a.WorkDurationSec/3600, 2)) AS Workhour
 	FROM StgTimesheets AS a
 	LEFT JOIN StgDailyWorkDurationAvg AS b ON
 		(a.`Date` = b.`Date`)
@@ -55,13 +59,13 @@ CREATE TABLE FactBranchHourlySalary AS
 			DATE_FORMAT(temp.`Date`, '%Y-%m') AS YearMonth,
 			temp.EmployeeId,
 			temp.BranchId,
-			temp.Salary
+			temp.MonthlySalary
 		FROM FactTimesheetsMast AS temp
 	), StgBranchMonthlySalary AS ( 
 		SELECT
 			temp.YearMonth,
 			temp.BranchId,
-			SUM(temp.Salary) AS Salary
+			SUM(temp.MonthlySalary) AS Salary
 		FROM StgEmployeeBranchMonthlySalary AS temp
 		GROUP BY
 			temp.YearMonth,
@@ -72,7 +76,7 @@ CREATE TABLE FactBranchHourlySalary AS
 		IFNULL(A.BranchId, B.BranchId) AS BranchId,
 		B.Salary,
 		A.Workhour,
-		ROUND(B.Salary/A.Workhour, 2) AS Salary_PerHour
+		ROUND(B.Salary/A.Workhour, 2) AS SalaryPerHour
 	FROM StgBranchMonthlyWorkhour AS A
 	INNER JOIN StgBranchMonthlySalary AS B ON
 		(A.YearMonth = B.YearMonth) AND
