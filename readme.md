@@ -12,7 +12,8 @@ DAG for ETL pipeline in SQL
 ## Assumptions and Formulas
 In order to get hourly salary calculation for each branch, year, month, we need to calculate total monthly salary and total work hours for each brand.
 
-Formula I used to calculate work hours that processed for each timesheet item:
+Formula I used to calculate work hours that processed for each timesheet item: 
+
 IF ('Checkout' AS TIME >= 'Checkin' AS TIME): 
   work duration in seconds = to_seconds(Checkout - Checkin)
 ELSE:
