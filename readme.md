@@ -7,7 +7,7 @@ DAG for ETL pipeline in SQL ('./sql/')
 ## Task B - Python
 DAG for ETL pipeline in Python ('./python/')
 ![image](https://github.com/zaldoiii/DE_Company_Challenge_01/assets/43696167/afd2f8a6-2c17-4d5a-85fa-5e534ce8bb56)
-Notice that Python's case requirements expected to run daily in incremental mode, I consider provide two final tables that could've been analyzed due the consistency for calculation particularly between salary and work hours. Those tables named according to the context or formula which are 'last 30 days' and 'month-to-date' (1st day until selected date of corresponding month).
+Notice that Python's case requirements expected to run daily in incremental mode, I choose to provide two final tables that could've been analyzed due the possible  calculation inconsistency, particularly between salary and work hours. Those tables named according to the context or formula which are 'last 30 days' and 'month-to-date' (1st day until selected date of corresponding month).
 
 
 ## Assumptions and Formulas
